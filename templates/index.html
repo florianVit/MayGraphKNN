@@ -1,484 +1,549 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
-    rel="stylesheet"
-  />
-  <title>Team Compatibility Analysis</title>
-  <style>
-    /* Styles inchangés */
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
-    h1 {
-      color: #1f2937;
-      font-weight: 600;
-      margin-bottom: 30px;
-    }
-    .container {
-      background-color: #ffffff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      width: 100%;
-      max-width: 600px;
-      text-align: center;
-    }
-    .radio-options {
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-    }
-    .radio-options label {
-      font-size: 16px;
-      color: #374151;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-    }
-    .radio-options input[type='radio'] {
-      margin-right: 5px;
-    }
-    #controls {
-      display: none;
-    }
-    #candidate-select,
-    #team-select,
-    #input-id {
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      margin-bottom: 15px;
-      width: 100%;
-      box-sizing: border-box;
-      display: none;
-    }
-    #team-members,
-    #candidate-team {
-      margin-top: 10px;
-      background-color: #f9fafb;
-      border: 1px solid #e5e7eb;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 14px;
-      color: #4b5563;
-      text-align: left;
-      display: none;
-    }
-    .button-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 20px;
-      margin-bottom: 25px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 15px;
-      background-color: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #2563eb;
-    }
-    button:disabled {
-      background-color: #9ca3af;
-      cursor: not-allowed;
-    }
-    #result {
-      margin-top: 30px;
-      max-width: 100%;
-      text-align: center;
-      position: relative;
-    }
-    #result img {
-      max-width: 100%;
-      border-radius: 10px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    #result img:hover {
-      transform: scale(1.02);
-    }
-    #error {
-      color: #dc2626;
-      background-color: #fee2e2;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 20px;
-      font-weight: 500;
-      display: none;
-    }
-    .loading-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.4);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-    .spinner {
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #3b82f6;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 2000;
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      max-width: 90%;
-      max-height: 90vh;
-      position: relative;
-    }
-    .modal img {
-      max-width: 100%;
-      max-height: 100%;
-      border-radius: 10px;
-      transform-origin: 0 0;
-      transition: transform 0.2s;
-    }
-    .close-modal {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 24px;
-      color: #fff;
-      background: #dc2626;
-      border: none;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      cursor: pointer;
-      line-height: 30px;
-      text-align: center;
-    }
-    .close-modal:hover {
-      background: #b91c1c;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <title>Team Compatibility Analysis</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .radio-options {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .radio-options label {
+            font-size: 16px;
+            color: #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .radio-options input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        #controls {
+            display: none;
+        }
+
+        #candidate-select, #team-select, #input-id {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            margin-bottom: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            display: none;
+        }
+
+        #team-members, #candidate-team {
+            margin-top: 10px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #4b5563;
+            text-align: left;
+            display: none;
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 15px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 30px;
+            max-width: 100%;
+            text-align: center;
+            position: relative;
+        }
+
+        #result img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #result img:hover {
+            transform: scale(1.02);
+        }
+
+        #error {
+            color: #dc2626;
+            background-color: #fee2e2;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3b82f6;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90vh;
+            position: relative;
+        }
+
+        .modal img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+            transform-origin: 0 0;
+            transition: transform 0.2s;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #fff;
+            background: #dc2626;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            line-height: 30px;
+            text-align: center;
+        }
+
+        .close-modal:hover {
+            background: #b91c1c;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Team Compatibility Analysis</h1>
-    <div class="radio-options">
-      <label><input type="radio" name="input-type" value="candidate" onchange="toggleControls()" /> Candidate</label>
-      <label><input type="radio" name="input-type" value="team" onchange="toggleControls()" /> Team</label>
+    <div class="container">
+        <h1>Team Compatibility Analysis</h1>
+        <div class="radio-options">
+            <label><input type="radio" name="input-type" value="candidate" onchange="toggleControls()"> Candidate</label>
+            <label><input type="radio" name="input-type" value="team" onchange="toggleControls()"> Team</label>
+        </div>
+        <div id="controls">
+            <select id="candidate-select" onchange="updateInput(); fetchCandidateTeam();"></select>
+            <div id="candidate-team"></div>
+            <select id="team-select" onchange="updateInput(); fetchTeamMembers();"></select>
+            <div id="team-members"></div>
+            <input type="text" id="input-id" placeholder="Enter a candidate ID or team name">
+            <div class="button-container">
+                <button id="generate-btn-big5" onclick="generatePlot('big5')">Big 5</button>
+                <button id="generate-btn-personality" onclick="generatePlot('personality')">Personality</button>
+                <button id="clear-cache-btn" onclick="clearCache()">Clear Cache</button>
+            </div>
+        </div>
+        <div id="result"></div>
+        <div id="error"></div>
+        <div class="loading-overlay" id="loading">
+            <div class="spinner"></div>
+        </div>
     </div>
-    <div id="controls">
-      <select id="candidate-select" onchange="updateInput(); fetchCandidateTeam();"></select>
-      <div id="candidate-team"></div>
-      <select id="team-select" onchange="updateInput(); fetchTeamMembers();"></select>
-      <div id="team-members"></div>
-      <input type="text" id="input-id" placeholder="Enter a candidate ID or team name" />
-      <div class="button-container">
-        <button id="generate-btn-big5" onclick="generatePlot('big5')">Big 5</button>
-        <button id="generate-btn-personality" onclick="generatePlot('personality')">Personality</button>
-        <button id="clear-cache-btn" onclick="clearCache()">Clear Cache</button>
-      </div>
+
+    <div class="modal" id="imageModal">
+        <button class="close-modal" onclick="closeModal()">×</button>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="Enlarged Chart">
+        </div>
     </div>
-    <div id="result"></div>
-    <div id="error"></div>
-    <div class="loading-overlay" id="loading">
-      <div class="spinner"></div>
-    </div>
-  </div>
 
-  <!-- Modal -->
-  <div class="modal" id="imageModal">
-    <button class="close-modal" onclick="closeModal()">×</button>
-    <div class="modal-content">
-      <img id="modalImage" src="" alt="Enlarged Chart" />
-    </div>
-  </div>
+    <script>
+        const API_BASE_URL = 'https://maygraphknn.onrender.com';
 
-  <script>
-    // Met à jour cette valeur en fonction de ton environnement de production ou développement
-    const API_BASE_URL = 'https://ton-domaine-ou-ip/api'; 
-    // Exemple : 'https://example.com/api' ou '/api' si même domaine et proxy configuré
+        let scale = 1;
+        let isDragging = false;
+        let startX, startY, translateX = 0, translateY = 0;
 
-    let scale = 1;
-    let isDragging = false;
-    let startX, startY, translateX = 0, translateY = 0;
+        async function populateDropdowns() {
+            try {
+                const candidateResponse = await fetch(`${API_BASE_URL}/candidates`);
+                if (!candidateResponse.ok) throw new Error('Failed to fetch candidates');
+                const candidates = await candidateResponse.json();
+                const candidateSelect = document.getElementById('candidate-select');
+                candidateSelect.innerHTML = '< quiso value="">Select a candidate (optional)</option>';
+                candidates.forEach(candidate => {
+                    const option = document.createElement('option');
+                    option.value = candidate.firebaseId;
+                    option.textContent = `${candidate.firstName} ${candidate.lastName} (${candidate.firebaseId})`;
+                    candidateSelect.appendChild(option);
+                });
 
-    async function populateDropdowns() {
-      try {
-        // Remplace avec ton endpoint serveur
-        const candidateResponse = await fetch(`${API_BASE_URL}/candidates`);
-        const candidates = await candidateResponse.json();
-        const candidateSelect = document.getElementById('candidate-select');
-        candidateSelect.innerHTML =
-          '<option value="">Select a candidate (optional)</option>';
-        candidates.forEach((candidate) => {
-          const option = document.createElement('option');
-          option.value = candidate.firebaseId;
-          option.textContent = `${candidate.firstName} ${candidate.lastName} (${candidate.firebaseId})`;
-          candidateSelect.appendChild(option);
+                const teamResponse = await fetch(`${API_BASE_URL}/teams`);
+                if (!teamResponse.ok) throw new Error('Failed to fetch teams');
+                const teams = await teamResponse.json();
+                const teamSelect = document.getElementById('team-select');
+                teamSelect.innerHTML = '<option value="">Select a team (optional)</option>';
+                teams.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team;
+                    option.textContent = team;
+                    teamSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Error loading candidates or teams. Please try again later.');
+            }
+        }
+
+        async function fetchTeamMembers() {
+            const teamSelect = document.getElementById('team-select');
+            const teamMembersDiv = document.getElementById('team-members');
+            teamMembersDiv.style.display = 'none';
+
+            const teamName = teamSelect.value;
+            if (!teamName) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/team-members?name=${encodeURIComponent(teamName)}`);
+                if (!response.ok) throw new Error('Failed to fetch team members');
+                const data = await response.json();
+                if (data.error) {
+                    teamMembersDiv.innerHTML = `Error: ${data.error}`;
+                } else if (data.members.length === 0) {
+                    teamMembersDiv.innerHTML = 'No members in this team.';
+                } else {
+                    teamMembersDiv.innerHTML = `<strong>Team Members:</strong><br>${data.members.join('<br>')}`;
+                }
+                teamMembersDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching team members:', error);
+                teamMembersDiv.innerHTML = 'Error loading team members.';
+                teamMembersDiv.style.display = 'block';
+            }
+        }
+
+        async function fetchCandidateTeam() {
+            const candidate mixtape candidateSelect = document.getElementById('candidate-select');
+            const candidateTeamDiv = document.getElementById('candidate-team');
+            candidateTeamDiv.style.display = 'none';
+
+            const firebaseId = candidateSelect.value;
+            if (!firebaseId) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/candidate-team?firebaseId=${encodeURIComponent(firebaseId)}`);
+                if (!response.ok) throw new Error('Failed to fetch candidate team');
+                const data = await response.json();
+                if (data.error) {
+                    candidateTeamDiv.innerHTML = `Error: ${data.error}`;
+                } else if (data.team) {
+                    candidateTeamDiv.innerHTML = `This candidate is in team: ${data.team}`;
+                } else {
+                    candidateTeamDiv.innerHTML = 'This candidate is not in any team.';
+                }
+                candidateTeamDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching candidate team:', error);
+                candidateTeamDiv.innerHTML = 'Error loading candidate team status.';
+                candidateTeamDiv.style.display = 'block';
+            }
+        }
+
+        function toggleControls() {
+            const candidateSelect = document.getElementById('candidate-select');
+            const teamSelect = document.getElementById('team-select');
+            const controls = document.getElementById('controls');
+            const inputId = document.getElementById('input-id');
+            const candidateRadio = document.querySelector('input[value="candidate"]');
+            const teamRadio = document.querySelector('input[value="team"]');
+            const teamMembersDiv = document.getElementById('team-members');
+            const candidateTeamDiv = document.getElementById('candidate-team');
+
+            controls.style.display = 'block';
+            candidateSelect.style.display = 'none';
+            teamSelect.style.display = 'none';
+            inputId.value = '';
+            teamMembersDiv.style.display = 'none';
+            candidateTeamDiv.style.display = 'none';
+
+            if (candidateRadio.checked) {
+                candidateSelect.style.display = 'block';
+                inputId.placeholder = 'Enter a candidate ID';
+                inputId.value = candidateSelect.value || '';
+                fetchCandidateTeam();
+            } else if (teamRadio.checked) {
+                teamSelect.style.display = 'block';
+                inputId.placeholder = 'Enter a team name';
+                inputId.value = teamSelect.value || '';
+                fetchTeamMembers();
+            }
+        }
+
+        function updateInput() {
+            const candidateSelect = document.getElementById('candidate-select');
+            const teamSelect = document.getElementById('team-select');
+            const inputId = document.getElementById('input-id');
+            const candidateRadio = document.querySelector('input[value="candidate"]');
+            
+            if (candidateRadio.checked) {
+                inputId.value = candidateSelect.value || '';
+                fetchCandidateTeam();
+            } else {
+                inputId.value = teamSelect.value || '';
+                fetchTeamMembers();
+            }
+        }
+
+        async function generatePlot(version) {
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            const btnBig5 = document.getElementById('generate-btn-big5');
+            const btnPersonality = document.getElementById('generate-btn-personality');
+            const btnClearCache = document.getElementById('clear-cache-btn');
+            const loadingOverlay = document.getElementById('loading');
+            const inputId = document.getElementById('input-id').value.trim();
+
+            resultDiv.innerHTML = '';
+            hideError();
+
+            if (!inputId) {
+                showError('Please enter a candidate ID or team name.');
+                return;
+            }
+
+            btnBig5.disabled = true;
+            btnPersonality.disabled = true;
+            btnClearCache.disabled = true;
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `input_id=${encodeURIComponent(inputId)}&version=${version}`
+                });
+                if (!response.ok) throw new Error('Failed to generate chart');
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    resultDiv.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Chart (${version})" onclick="openModal(this)">`;
+                }
+            } catch (error) {
+                showError('Error generating the chart. Please try again later.');
+                console.error(error);
+            } finally {
+                btnBig5.disabled = false;
+                btnPersonality.disabled = false;
+                btnClearCache.disabled = false;
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        async function clearCache() {
+            const errorDiv = document.getElementById('error');
+            const btnBig5 = document.getElementById('generate-btn-big5');
+            const btnPersonality = document.getElementById('generate-btn-personality');
+            const btnClearCache = document.getElementById('clear-cache-btn');
+            const loadingOverlay = document.getElementById('loading');
+
+            hideError();
+            btnBig5.disabled = true;
+            btnPersonality.disabled = true;
+            btnClearCache.disabled = true;
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/clear-cache`, { method: 'POST' });
+                if (!response.ok) throw new Error('Failed to clear cache');
+                const data = await response.json();
+                alert(data.message);
+            } catch (error) {
+                showError('Error clearing the cache. Please try again later.');
+                console.error('Error clearing the cache:', error);
+            } finally {
+                btnBig5.disabled = false;
+                btnPersonality.disabled = false;
+                btnClearCache.disabled = false;
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        function openModal(img) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'flex';
+            modalImg.src = img.src;
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+            modalImg.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+        }
+
+        function updateTransform() {
+            const modalImg = document.getElementById('modalImage');
+            modalImg.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+        }
+
+        document.getElementById('imageModal').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY * -0.01;
+            const newScale = Math.min(Math.max(0.5, scale + delta), 3);
+            if (newScale !== scale) {
+                scale = newScale;
+                updateTransform();
+            }
         });
 
-        const teamResponse = await fetch(`${API_BASE_URL}/teams`);
-        const teams = await teamResponse.json();
-        const teamSelect = document.getElementById('team-select');
-        teamSelect.innerHTML = '<option value="">Select a team (optional)</option>';
-        teams.forEach((team) => {
-          const option = document.createElement('option');
-          option.value = team;
-          option.textContent = team;
-          teamSelect.appendChild(option);
+        let modalImg = document.getElementById('modalImage');
+        modalImg.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            modalImg.style.cursor = 'grabbing';
         });
-      } catch (error) {
-        console.error('Error loading data:', error);
-        showError('Error loading candidates or teams.');
-      }
-    }
 
-    async function fetchTeamMembers() {
-      const teamSelect = document.getElementById('team-select');
-      const teamMembersDiv = document.getElementById('team-members');
-      teamMembersDiv.style.display = 'none';
+        modalImg.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateTransform();
+            }
+        });
 
-      const teamName = teamSelect.value;
-      if (!teamName) return;
+        modalImg.addEventListener('mouseup', () => {
+            isDragging = false;
+            modalImg.style.cursor = 'zoom-in';
+        });
 
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/team-members?name=${encodeURIComponent(teamName)}`
-        );
-        const data = await response.json();
-        if (data.error) {
-          teamMembersDiv.innerHTML = `Error: ${data.error}`;
-        } else if (data.members.length === 0) {
-          teamMembersDiv.innerHTML = 'No members in this team.';
-        } else {
-          teamMembersDiv.innerHTML = `<strong>Team Members:</strong><br>${data.members.join(
-            '<br>'
-          )}`;
+        modalImg.addEventListener('mouseleave', () => {
+            isDragging = false;
+            modalImg.style.cursor = 'zoom-in';
+        });
+
+        modalImg.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].clientX - translateX;
+                startY = e.touches[0].clientY - translateY;
+            }
+        });
+
+        modalImg.addEventListener('touchmove', (e) => {
+            if (isDragging && e.touches.length === 1) {
+                translateX = e.touches[0].clientX - startX;
+                translateY = e.touches[0].clientY - startY;
+                updateTransform();
+            }
+        });
+
+        modalImg.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
         }
-        teamMembersDiv.style.display = 'block';
-      } catch (error) {
-        console.error('Error fetching team members:', error);
-        teamMembersDiv.innerHTML = 'Error loading team members.';
-        teamMembersDiv.style.display = 'block';
-      }
-    }
 
-    async function fetchCandidateTeam() {
-      const candidateSelect = document.getElementById('candidate-select');
-      const candidateTeamDiv = document.getElementById('candidate-team');
-      candidateTeamDiv.style.display = 'none';
-
-      const firebaseId = candidateSelect.value;
-      if (!firebaseId) return;
-
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/candidate-team?firebaseId=${encodeURIComponent(firebaseId)}`
-        );
-        const data = await response.json();
-        if (data.error) {
-          candidateTeamDiv.innerHTML = `Error: ${data.error}`;
-        } else if (data.team) {
-          candidateTeamDiv.innerHTML = `This candidate is in team: ${data.team}`;
-        } else {
-          candidateTeamDiv.innerHTML = 'This candidate is not in any team.';
+        function hideError() {
+            const errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'none';
         }
-        candidateTeamDiv.style.display = 'block';
-      } catch (error) {
-        console.error('Error fetching candidate team:', error);
-        candidateTeamDiv.innerHTML = 'Error loading candidate team status.';
-        candidateTeamDiv.style.display = 'block';
-      }
-    }
 
-    function toggleControls() {
-      const candidateSelect = document.getElementById('candidate-select');
-      const teamSelect = document.getElementById('team-select');
-      const controls = document.getElementById('controls');
-      const inputId = document.getElementById('input-id');
-      const candidateRadio = document.querySelector('input[value="candidate"]');
-      const teamRadio = document.querySelector('input[value="team"]');
-      const teamMembersDiv = document.getElementById('team-members');
-      const candidateTeamDiv = document.getElementById('candidate-team');
-
-      controls.style.display = 'block';
-      candidateSelect.style.display = 'none';
-      teamSelect.style.display = 'none';
-      inputId.value = '';
-      teamMembersDiv.style.display = 'none';
-      candidateTeamDiv.style.display = 'none';
-
-      if (candidateRadio.checked) {
-        candidateSelect.style.display = 'block';
-        inputId.placeholder = 'Enter a candidate ID';
-      } else if (teamRadio.checked) {
-        teamSelect.style.display = 'block';
-        inputId.placeholder = 'Enter a team name';
-      }
-    }
-
-    function updateInput() {
-      const candidateSelect = document.getElementById('candidate-select');
-      const teamSelect = document.getElementById('team-select');
-      const inputId = document.getElementById('input-id');
-
-      if (candidateSelect.style.display === 'block') {
-        inputId.value = candidateSelect.value || '';
-      } else if (teamSelect.style.display === 'block') {
-        inputId.value = teamSelect.value || '';
-      }
-    }
-
-    async function generatePlot(type) {
-      const inputId = document.getElementById('input-id').value.trim();
-      const errorDiv = document.getElementById('error');
-      const resultDiv = document.getElementById('result');
-      errorDiv.style.display = 'none';
-      resultDiv.innerHTML = '';
-
-      if (!inputId) {
-        showError('Please select or enter a candidate ID or team name.');
-        return;
-      }
-
-      showLoading(true);
-
-      try {
-        // URL dynamique selon type et input
-        const url = `${API_BASE_URL}/plot-${type}?id=${encodeURIComponent(inputId)}`;
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Server returned status ${response.status}`);
-        }
-        const data = await response.json();
-
-        if (data.error) {
-          showError(data.error);
-        } else if (data.imageUrl) {
-          const img = document.createElement('img');
-          img.src = data.imageUrl;
-          img.alt = `${type} plot`;
-          img.onclick = () => openModal(img.src);
-          resultDiv.appendChild(img);
-        } else {
-          showError('Unexpected response from server.');
-        }
-      } catch (error) {
-        console.error('Error generating plot:', error);
-        showError('Failed to generate plot. Please try again later.');
-      } finally {
-        showLoading(false);
-      }
-    }
-
-    function showError(message) {
-      const errorDiv = document.getElementById('error');
-      errorDiv.textContent = message;
-      errorDiv.style.display = 'block';
-    }
-
-    function clearCache() {
-      localStorage.clear();
-      alert('Cache cleared.');
-    }
-
-    function showLoading(show) {
-      const loading = document.getElementById('loading');
-      loading.style.display = show ? 'flex' : 'none';
-    }
-
-    // Modal functions
-    function openModal(src) {
-      const modal = document.getElementById('imageModal');
-      const modalImg = document.getElementById('modalImage');
-      modalImg.src = src;
-      modal.style.display = 'flex';
-      scale = 1;
-      translateX = 0;
-      translateY = 0;
-      modalImg.style.transform = 'translate(0px, 0px) scale(1)';
-    }
-
-    function closeModal() {
-      const modal = document.getElementById('imageModal');
-      modal.style.display = 'none';
-    }
-
-    // Zoom and pan logic for modal image
-    const modalImg = document.getElementById('modalImage');
-    if (modalImg) {
-      modalImg.addEventListener('wheel', (event) => {
-        event.preventDefault();
-        const delta = event.deltaY > 0 ? -0.1 : 0.1;
-        scale = Math.min(Math.max(0.1, scale + delta), 3);
-        updateTransform();
-      });
-
-      modalImg.addEventListener('mousedown', (event) => {
-        event.preventDefault();
-        isDragging = true;
-        startX = event.clientX - translateX;
-        startY = event.clientY - translateY;
-      });
-
-      window.addEventListener('mouseup', () => {
-        isDragging = false;
-      });
-
-      window.addEventListener('mousemove', (event) => {
-        if (!isDragging) return;
-        translateX = event.clientX - startX;
-        translateY = event.clientY - startY;
-        updateTransform();
-      });
-    }
-
-    function updateTransform() {
-      modalImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-    }
-
-    // Initial load
-    window.onload = () => {
-      populateDropdowns();
-    };
-  </script>
+        window.onload = populateDropdowns;
+    </script>
 </body>
 </html>
