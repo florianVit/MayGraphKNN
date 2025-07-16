@@ -26,6 +26,7 @@ CACHE_DURATION = 3600  # Cache results for 1 hour
 def index():
     print("Accessing the / route")
     return render_template('index.html')
+    # return render_template('local.html') #si on souhaite utiliser le fichier local.html pour travailler en local
 
 @app.route('/teams', methods=['GET'])
 def get_teams():
