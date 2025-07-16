@@ -250,11 +250,9 @@
 
         async function populateDropdowns() {
             try {
-                //const candidateResponse = await fetch('http://127.0.0.1:5000/candidates');
-                const API_BASE_URL = 'https://maygraphknn.onrender.com'; // ou '' si même serveur
+                const API_BASE_URL = 'https://maygraphknn.onrender.com';
 
-                await fetch(`${API_BASE_URL}/candidates`);
-
+                const candidateResponse = await fetch(`${API_BASE_URL}/candidates`);
                 const candidates = await candidateResponse.json();
                 const candidateSelect = document.getElementById('candidate-select');
                 candidateSelect.innerHTML = '<option value="">Select a candidate (optional)</option>';
@@ -265,7 +263,7 @@
                     candidateSelect.appendChild(option);
                 });
 
-                const teamResponse = await fetch('http://127.0.0.1:5000/teams');
+                const teamResponse = await fetch(`${API_BASE_URL}/teams`);
                 const teams = await teamResponse.json();
                 const teamSelect = document.getElementById('team-select');
                 teamSelect.innerHTML = '<option value="">Select a team (optional)</option>';
@@ -280,6 +278,7 @@
                 showError('Error loading candidates or teams.');
             }
         }
+
 
         async function fetchTeamMembers() {
             const teamSelect = document.getElementById('team-select');
