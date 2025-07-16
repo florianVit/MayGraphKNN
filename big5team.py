@@ -21,7 +21,7 @@ def generate_plot(team_name="NinjaEnglineers"):
     client = MongoClient(MONGO_URI)
     db = client[DB_NAME]
 
-    # --- Fonctions utilitaires ---
+    # --- Utility functions ---
     def extract_big5_vector(tests):
         if not tests or not tests.get("questions"):
             return None
@@ -53,13 +53,13 @@ def generate_plot(team_name="NinjaEnglineers"):
         distance = np.clip(distance, min_d, max_d)
         return round(np.clip(100 - ((distance - min_d) / (max_d - min_d)) * 40, 0, 100), 1)
 
-    # --- Charger l’équipe cible ---
+    # --- Load the target team ---
     t1 = time.time()
     team = db.teams.find_one({"name": team_name}, {"name": 1, "members": 1})
     if not team:
         print(f"Team query: {time.time() - t1:.2f}s")
         print(f"Total time: {time.time() - start_time:.2f}s")
-        return None, f"Équipe '{team_name}' introuvable."
+        return None, f"Team '{team_name}' not found."
 
     member_ids = team.get("members", [])
     members = list(db.candidates.find(
@@ -68,7 +68,7 @@ def generate_plot(team_name="NinjaEnglineers"):
     ))
     print(f"Team and members query: {time.time() - t1:.2f}s")
 
-    # --- Calculer le vecteur moyen de l’équipe ---
+    # --- Compute the team average vector ---
     t2 = time.time()
     member_vectors = []
     all_test_ids = set(t for m in members for t in m.get("tests", []))
@@ -89,11 +89,11 @@ def generate_plot(team_name="NinjaEnglineers"):
 
     if not member_vectors:
         print(f"Total time: {time.time() - start_time:.2f}s")
-        return None, "Aucun membre avec un test Big 5 valide."
+        return None, "No team member has a valid Big 5 test."
 
     team_vector = np.mean(np.stack(member_vectors), axis=0)
 
-    # --- Charger tous les candidats autres que les membres ---
+    # --- Load all candidates except team members ---
     t4 = time.time()
     excluded_ids = [m["_id"] for m in members]
     candidates = list(db.candidates.find(
@@ -107,7 +107,7 @@ def generate_plot(team_name="NinjaEnglineers"):
     )}
     print(f"Candidates and tests query: {time.time() - t4:.2f}s")
 
-    # --- Extraction des vecteurs candidats ---
+    # --- Extract candidate vectors ---
     t5 = time.time()
     all_vectors = []
     valid_candidates = []
@@ -123,25 +123,25 @@ def generate_plot(team_name="NinjaEnglineers"):
 
     if not all_vectors:
         print(f"Total time: {time.time() - start_time:.2f}s")
-        return None, "Aucun candidat trouvé."
+        return None, "No valid candidates found."
 
     X = np.array(all_vectors)
     index_to_candidate = {i: c for i, c in enumerate(valid_candidates)}
 
-    # --- Recherche KNN ---
+    # --- KNN Search ---
     t6 = time.time()
     top_candidates_with_distances = find_top_candidates(X, team_vector, index_to_candidate)
     print(f"KNN computation: {time.time() - t6:.2f}s")
 
     if not top_candidates_with_distances:
         print(f"Total time: {time.time() - start_time:.2f}s")
-        return None, "Aucun candidat compatible trouvé."
+        return None, "No compatible candidates found."
 
-    # --- Résultats formatés ---
+    # --- Formatted results ---
     results = []
     for c, dist in top_candidates_with_distances[:10]:
         score = distance_to_score(dist)
-        name = f"{c.get('firstName', '')} {c.get('lastName', '')}".strip() or "Anonyme"
+        name = f"{c.get('firstName', '')} {c.get('lastName', '')}".strip() or "Anonymous"
         results.append((name, dist, score))
 
     df_plot = pd.DataFrame({
@@ -150,8 +150,7 @@ def generate_plot(team_name="NinjaEnglineers"):
         "score": [r[2] for r in results]
     })
 
-    # --- Visualisation ---
-    # --- Visualisation ---
+    # --- Visualization ---
     t7 = time.time()
     plt.style.use('default')
     fig, (ax_bar, ax_radial) = plt.subplots(1, 2, figsize=(18, 9), dpi=100)
@@ -161,7 +160,7 @@ def generate_plot(team_name="NinjaEnglineers"):
     ax_radial.set_xlim(-30, 30)
     ax_radial.set_ylim(-30, 30)
     ax_radial.set_aspect('equal')
-    ax_radial.set_title(f"Candidats proches de l’équipe '{team_name}'", fontsize=14)
+    ax_radial.set_title(f"Candidates closest to team '{team_name}'", fontsize=14)
     ax_radial.set_facecolor('#E6F0FA')
     ax_radial.grid(False)
 
@@ -186,7 +185,7 @@ def generate_plot(team_name="NinjaEnglineers"):
                            arrowprops=dict(arrowstyle='->', color='black'))
 
     ax_radial.plot(0, 0, marker='x', color='black', markersize=12, mew=2)
-    ax_radial.text(0, 1, f"Équipe: {team_name}", fontsize=9, ha='center', va='bottom', color='black')
+    ax_radial.text(0, 1, f"Team: {team_name}", fontsize=9, ha='center', va='bottom', color='black')
     ax_radial.set_xticks([])
     ax_radial.set_yticks([])
 
@@ -206,8 +205,8 @@ def generate_plot(team_name="NinjaEnglineers"):
     ax_bar.set_yticks(y_pos)
     ax_bar.set_yticklabels(candidates_ranked, fontsize=9)
     ax_bar.set_xlim(0, 110)
-    ax_bar.set_xlabel("Taux de compatibilité (%)", fontsize=11)
-    ax_bar.set_title("Top 10 candidats pour l’équipe", fontsize=13, pad=10)
+    ax_bar.set_xlabel("Compatibility Rate (%)", fontsize=11)
+    ax_bar.set_title("Top 10 Candidates for the Team", fontsize=13, pad=10)
     ax_bar.grid(axis='x', linestyle='--', alpha=0.3)
     ax_bar.spines['top'].set_visible(False)
     ax_bar.spines['right'].set_visible(False)

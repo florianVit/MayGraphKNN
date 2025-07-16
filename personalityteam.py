@@ -53,13 +53,13 @@ def generate_plot(team_name="NinjaEnglineers"):
                 vector.append(answer)
         return np.array(vector, dtype=float)
 
-    # --- Charger l'équipe cible ---
+    # --- Load the target team ---
     t1 = time.time()
     team = db.teams.find_one({"name": team_name}, {"name": 1, "members": 1})
     if not team:
         print(f"Team query: {time.time() - t1:.2f}s")
         print(f"Total time: {time.time() - start_time:.2f}s")
-        return None, f"Équipe '{team_name}' introuvable."
+        return None, f"Team '{team_name}' not found."
 
     member_ids = team.get("members", [])
     members = list(db.candidates.find(
@@ -68,7 +68,7 @@ def generate_plot(team_name="NinjaEnglineers"):
     ))
     print(f"Team and members query: {time.time() - t1:.2f}s")
 
-    # Précharger les tests des membres
+    # Preload members' tests
     t2 = time.time()
     test_ids = set(t for m in members for t in m.get("tests", []))
     test_docs = {t["_id"]: t for t in db.tests.find(
@@ -92,11 +92,11 @@ def generate_plot(team_name="NinjaEnglineers"):
 
     if not member_vectors:
         print(f"Total time: {time.time() - start_time:.2f}s")
-        return None, "Aucun vecteur de membre valide trouvé."
+        return None, "No valid member vector found."
 
     team_vector = np.mean(np.stack(member_vectors), axis=0)
 
-    # --- Charger les candidats non membres ---
+    # --- Load non-member candidates ---
     t4 = time.time()
     excluded_ids = [m["_id"] for m in members]
     candidates = list(db.candidates.find(
@@ -127,9 +127,9 @@ def generate_plot(team_name="NinjaEnglineers"):
 
     if not all_vectors:
         print(f"Total time: {time.time() - start_time:.2f}s")
-        return None, "Aucun candidat valide trouvé."
+        return None, "No valid candidate found."
 
-    # --- Harmonisation ---
+    # --- Vector alignment ---
     t6 = time.time()
     def align_vectors(vectors):
         max_len = max(len(v) for v in vectors)
@@ -147,7 +147,7 @@ def generate_plot(team_name="NinjaEnglineers"):
     index_to_candidate = {i: c for i, c in enumerate(valid_candidates)}
     print(f"Vector alignment: {time.time() - t6:.2f}s")
 
-    # --- Recherche KNN ---
+    # --- KNN search ---
     t7 = time.time()
     def find_top_candidates(X, team_vector, index_to_candidate, min_results=10, k_start=20, k_max=50):
         knn = NearestNeighbors(n_neighbors=min(k_max, len(X)), metric='euclidean').fit(X)
@@ -164,13 +164,13 @@ def generate_plot(team_name="NinjaEnglineers"):
 
     if not top_candidates_with_distances:
         print(f"Total time: {time.time() - start_time:.2f}s")
-        return None, "Aucun candidat proche trouvé."
+        return None, "No close candidate found."
 
-    # --- Résultats ---
+    # --- Results ---
     results = []
     for c, dist in top_candidates_with_distances[:10]:
         score = distance_to_score(dist)
-        name = f"{c.get('firstName', '')} {c.get('lastName', '')}".strip() or "Anonyme"
+        name = f"{c.get('firstName', '')} {c.get('lastName', '')}".strip() or "Anonymous"
         results.append((name, dist, score))
 
     df_plot = pd.DataFrame({
@@ -179,7 +179,7 @@ def generate_plot(team_name="NinjaEnglineers"):
         "score": [r[2] for r in results]
     })
 
-    # --- Visualisation ---
+    # --- Visualization ---
     t8 = time.time()
     plt.style.use('default')
     fig, (ax_bar, ax_radial) = plt.subplots(1, 2, figsize=(18, 9), dpi=100)
@@ -189,7 +189,7 @@ def generate_plot(team_name="NinjaEnglineers"):
     ax_radial.set_xlim(-30, 30)
     ax_radial.set_ylim(-30, 30)
     ax_radial.set_aspect('equal')
-    ax_radial.set_title(f"Candidats proches de l’équipe '{team_name}'", fontsize=14)
+    ax_radial.set_title(f"Top matching candidates for team '{team_name}'", fontsize=14)
     ax_radial.set_facecolor('#E6F0FA')
     ax_radial.grid(False)
 
@@ -213,14 +213,14 @@ def generate_plot(team_name="NinjaEnglineers"):
                            arrowprops=dict(arrowstyle='->', color='black'))
 
     ax_radial.plot(0, 0, marker='x', color='black', markersize=12, mew=2)
-    ax_radial.text(0, 1, f"Équipe: {team_name}", fontsize=9, ha='center', va='bottom', color='black')
+    ax_radial.text(0, 1, f"Team: {team_name}", fontsize=9, ha='center', va='bottom', color='black')
     ax_radial.set_xticks([])
     ax_radial.set_yticks([])
 
     # Bar chart
     candidates_ranked = df_plot["candidate"][::-1]
     scores_ranked = df_plot["score"][::-1]
-    sizes_ranked = [len(members)] * len(df_plot)  # Taille de l’équipe utilisée pour chaque score
+    sizes_ranked = [len(members)] * len(df_plot)  # Team size used for each score
     bar_colors = colors[:len(candidates_ranked)][::-1]
 
     y_pos = np.arange(len(candidates_ranked))
@@ -230,13 +230,13 @@ def generate_plot(team_name="NinjaEnglineers"):
         score = scores_ranked.iloc[i]
         size = sizes_ranked[i]
         ax_bar.text(bar.get_width() + 1, bar.get_y() + bar.get_height() / 2,
-                    f"{score:.1f}%  (sur {size} membre{'s' if size > 1 else ''})", va='center', fontsize=9)
+                    f"{score:.1f}%  (based on {size} member{'s' if size > 1 else ''})", va='center', fontsize=9)
 
     ax_bar.set_yticks(y_pos)
     ax_bar.set_yticklabels(candidates_ranked, fontsize=9)
     ax_bar.set_xlim(0, 110)
-    ax_bar.set_xlabel("Taux de compatibilité (%)", fontsize=11)
-    ax_bar.set_title("Classement des candidats", fontsize=13, pad=10)
+    ax_bar.set_xlabel("Compatibility Score (%)", fontsize=11)
+    ax_bar.set_title("Candidate Ranking", fontsize=13, pad=10)
     ax_bar.grid(axis='x', linestyle='--', alpha=0.3)
     ax_bar.spines['top'].set_visible(False)
     ax_bar.spines['right'].set_visible(False)

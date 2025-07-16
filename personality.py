@@ -17,7 +17,7 @@ import time
 def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
     os.environ["LOKY_MAX_CPU_COUNT"] = "8"
 
-    # --- Initialisation ---
+    # --- Initialization ---
     load_dotenv()
     MONGO_URI = os.getenv("MONGO_URI")
     DB_NAME = os.getenv("DB_NAME")
@@ -33,7 +33,7 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
     }
     TEST_NAMES = list(TEST_TYPES.keys())
 
-    # --- Extraction du vecteur combiné ---
+    # --- Extract combined vector ---
     def extract_combined_vector(tests, required_names):
         vector = []
         for name in required_names:
@@ -57,10 +57,10 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
                 vector.append(answer)
         return np.array(vector, dtype=float)
 
-    # --- Chargement du candidat ---
+    # --- Load candidate ---
     candidate = db.candidates.find_one({"firebaseId": firebase_id})
     if not candidate:
-        return None, "Candidat introuvable."
+        return None, "Candidate not found."
 
     test_ids = [ObjectId(t.get("$oid")) if isinstance(t, dict) else t for t in candidate.get("tests", [])]
     tests_cursor = db.tests.find({"_id": {"$in": test_ids}})
@@ -68,13 +68,13 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
 
     candidate_vector = extract_combined_vector(candidate_tests, TEST_NAMES)
     if candidate_vector is None:
-        return None, "Le candidat n’a pas encore complété tous les questionnaires requis."
+        return None, "Candidate has not completed all required questionnaires."
 
-    # --- Chargement des équipes et membres ---
+    # --- Load teams and members ---
     teams = list(db.teams.find({}))
     team_of_candidate = next((team for team in teams if candidate["_id"] in team.get("members", [])), None)
     if team_of_candidate:
-        print(f"Le candidat est déjà dans l'équipe : {team_of_candidate.get('name', 'Nom inconnu')}")
+        print(f"Candidate is already in the team: {team_of_candidate.get('name', 'Unknown name')}")
 
     member_ids = [m for team in teams for m in team.get("members", [])]
     members = list(db.candidates.find({"_id": {"$in": member_ids}}))
@@ -99,10 +99,10 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
             all_candidates.append(member)
             for team in teams:
                 if member["_id"] in team.get("members", []):
-                    team_lookup[str(member["_id"])] = team.get("name", "Équipe inconnue")
+                    team_lookup[str(member["_id"])] = team.get("name", "Unknown team")
                     break
 
-    # --- Harmonisation des vecteurs ---
+    # --- Align vectors ---
     def align_vectors(vectors):
         max_len = max(len(v) for v in vectors)
         aligned = []
@@ -117,7 +117,7 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
     X = align_vectors(all_vectors)
     candidate_vector = align_vectors([candidate_vector])[0]
 
-    # --- KNN adaptatif ---
+    # --- Adaptive KNN ---
     def find_top_teams(X, candidate_vector, index_to_team, min_teams=10, k_start=5, k_max=50):
         for k in range(k_start, min(k_max, len(X)) + 1):
             knn = NearestNeighbors(n_neighbors=k, metric='euclidean')
@@ -137,7 +137,7 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
 
     team_members = find_top_teams(X, candidate_vector, index_to_team)
     if not team_members:
-        return None, "Aucune équipe proche trouvée."
+        return None, "No similar team found."
 
     # --- Scoring ---
     def distance_to_score(distance, min_d=5, max_d=12):
@@ -155,7 +155,7 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
         "size": [r[2] for r in top_teams]
     })
 
-    # --- Visualisation ---
+    # --- Visualization ---
     plt.style.use('default')
     fig, (ax_bar, ax_radial) = plt.subplots(1, 2, figsize=(18, 9), dpi=100)
     fig.patch.set_facecolor('#F5F7FA')
@@ -164,7 +164,7 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
     ax_radial.set_xlim(-30, 30)
     ax_radial.set_ylim(-30, 30)
     ax_radial.set_aspect('equal')
-    ax_radial.set_title("Équipes proches du candidat", fontsize=14)
+    ax_radial.set_title("Teams closest to the candidate", fontsize=14)
     ax_radial.set_facecolor('#E6F0FA')
     ax_radial.grid(False)
 
@@ -206,13 +206,13 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
         score = scores_ranked.iloc[i]
         size = sizes_ranked.iloc[i]
         ax_bar.text(bar.get_width() + 1, bar.get_y() + bar.get_height() / 2,
-                    f"{score:.1f}%  (sur {size} membre{'s' if size > 1 else ''})", va='center', fontsize=9)
+                    f"{score:.1f}%  (from {size} member{'s' if size > 1 else ''})", va='center', fontsize=9)
 
     ax_bar.set_yticks(y_pos)
     ax_bar.set_yticklabels(teams_ranked, fontsize=9)
     ax_bar.set_xlim(0, 110)
-    ax_bar.set_xlabel("Taux de compatibilité (%)", fontsize=11)
-    ax_bar.set_title("Classement des équipes", fontsize=13, pad=10)
+    ax_bar.set_xlabel("Compatibility Rate (%)", fontsize=11)
+    ax_bar.set_title("Team Ranking", fontsize=13, pad=10)
     ax_bar.grid(axis='x', linestyle='--', alpha=0.3)
     ax_bar.spines['top'].set_visible(False)
     ax_bar.spines['right'].set_visible(False)
