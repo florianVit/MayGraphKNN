@@ -250,7 +250,11 @@
 
         async function populateDropdowns() {
             try {
-                const candidateResponse = await fetch('http://127.0.0.1:5000/candidates');
+                //const candidateResponse = await fetch('http://127.0.0.1:5000/candidates');
+                const API_BASE_URL = 'https://maygraphknn.onrender.com'; // ou '' si même serveur
+
+                await fetch(`${API_BASE_URL}/candidates`);
+
                 const candidates = await candidateResponse.json();
                 const candidateSelect = document.getElementById('candidate-select');
                 candidateSelect.innerHTML = '<option value="">Select a candidate (optional)</option>';
