@@ -1,4 +1,4 @@
-# generate_plot_v4.py
+# generate_plot_v4.py for team
 from pymongo import MongoClient
 from bson import ObjectId
 from sklearn.neighbors import NearestNeighbors
