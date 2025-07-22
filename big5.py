@@ -85,6 +85,10 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
         return None, "Invalid or incomplete Big 5 test for this candidate."
 
     teams = list(db.teams.find({}))
+
+    current_team = next((team.get("name") for team in teams if candidate["_id"] in team.get("members", [])), None)
+
+
     member_ids = [m for team in teams for m in team.get("members", [])]
     members = list(db.candidates.find({"_id": {"$in": member_ids}}))
 
@@ -116,6 +120,14 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
     team_members = find_top_teams(X, candidate_vector, index_to_team)
     if not team_members:
         return None, "No similar teams found."
+
+    # Exclude the candidate's current team
+    if current_team:
+        team_members = {team: dists for team, dists in team_members.items() if team != current_team}
+
+    if not team_members:
+        return None, "No similar teams found after removing candidate's current team."
+
 
     # --- Scoring ---
     results = [(np.mean(dists), team, len(dists)) for team, dists in team_members.items()]
