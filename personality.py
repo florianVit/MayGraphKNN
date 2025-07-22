@@ -72,6 +72,9 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
 
     # --- Load teams and members ---
     teams = list(db.teams.find({}))
+
+    current_team = next((team.get("name") for team in teams if candidate["_id"] in team.get("members", [])), None)
+    
     team_of_candidate = next((team for team in teams if candidate["_id"] in team.get("members", [])), None)
     if team_of_candidate:
         print(f"Candidate is already in the team: {team_of_candidate.get('name', 'Unknown name')}")
@@ -137,7 +140,14 @@ def generate_plot(firebase_id="f5qE4BSXEghVQtRHYeYoIMoU5lH2"):
 
     team_members = find_top_teams(X, candidate_vector, index_to_team)
     if not team_members:
-        return None, "No similar team found."
+        return None, "No similar teams found."
+
+    # Exclude the candidate's current team
+    if current_team:
+        team_members = {team: dists for team, dists in team_members.items() if team != current_team}
+
+    if not team_members:
+        return None, "No similar teams found after removing candidate's current team."
 
     # --- Scoring ---
     def distance_to_score(distance, min_d=5, max_d=12):
