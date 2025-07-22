@@ -1,2 +1,2 @@
 .env
-templates: .local.html
+/templates/local.html
