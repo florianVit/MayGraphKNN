@@ -44,7 +44,7 @@ def generate_plot(team_name="NinjaEnglineers"):
         return next((t for t in tests if t.get("specId") == "003" or "big 5" in t.get("name", "").lower()), None)
 
     def find_top_candidates(X, team_vector, index_to_candidate, min_results=10, k_start=5, k_max=50):
-        knn = NearestNeighbors(n_neighbors=min(k_max, len(X)), metric='euclidean').fit(X)
+        knn = NearestNeighbors(n_neighbors=min(k_max, len(X)), metric='cosine').fit(X)
         distances, indices = knn.kneighbors([team_vector])
         candidates_near = [(index_to_candidate[idx], distances[0][i]) for i, idx in enumerate(indices[0][:min_results])]
         return candidates_near if len(candidates_near) >= min_results else []
