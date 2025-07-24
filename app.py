@@ -55,27 +55,57 @@ def get_candidates():
 @app.route('/team-members', methods=['GET'])
 def get_team_members():
     try:
-        team_name = request.args.get('name', '').strip()
-        if not team_name:
-            return jsonify({'error': 'No team name provided.'}), 400
+        firebase_id = request.args.get('firebaseId', '').strip()
+        if not firebase_id:
+            return jsonify({'error': 'No candidate ID provided.'}), 400
 
-        team = db.teams.find_one({"name": team_name}, {"members": 1})
+        candidate = db.candidates.find_one({"firebaseId": firebase_id}, {"_id": 1})
+        if not candidate:
+            return jsonify({'error': f"Candidate '{firebase_id}' not found."}), 404
+
+        team = db.teams.find_one({"members": candidate['_id']}, {"name": 1, "members": 1})
         if not team:
-            return jsonify({'error': f"Team '{team_name}' not found."}), 404
+            return jsonify({'error': f"Candidate '{firebase_id}' is not in a team."}), 404
 
-        member_ids = [ObjectId(m) for m in team.get('members', [])]
-        members = list(db.candidates.find(
-            {"_id": {"$in": member_ids}},
-            {"firstName": 1, "lastName": 1}
-        ))
-        member_names = [
-            f"{m.get('firstName', '')} {m.get('lastName', '')}".strip() or "Anonymous"
-            for m in members
-        ]
-        return jsonify({'members': member_names})
+        team_name = team["name"]
+        member_ids = team["members"]
+        required_tests = {
+            "Assertiveness",
+            "Creative or Analytical",
+            "Intellectual Curiosity",
+            "Entrepreneur",
+            "Self-Motivation"
+        }
+
+        members = db.candidates.find({"_id": {"$in": member_ids}}, {"firebaseId": 1, "firstName": 1, "lastName": 1, "tests": 1})
+        results = []
+
+        for member in members:
+            test_ids = member.get("tests", [])
+            test_ids = [ObjectId(t.get("$oid")) if isinstance(t, dict) else t for t in test_ids]
+            tests = list(db.tests.find({"_id": {"$in": test_ids}}))
+
+            has_big5 = any(t.get("specId") == "003" or "big 5" in t.get("name", "").lower() for t in tests)
+            completed_tests = {t.get("name") for t in tests}
+            missing_personality_tests = sorted(required_tests - completed_tests)
+
+            results.append({
+                "firebaseId": member.get("firebaseId"),
+                "firstName": member.get("firstName"),
+                "lastName": member.get("lastName"),
+                "hasBig5": has_big5,
+                "missingPersonalityTests": missing_personality_tests
+            })
+
+        return jsonify({
+            "teamName": team_name,
+            "members": results
+        })
+
     except Exception as e:
-        print(f"Error fetching team members: {e}")
+        print(f"Error in /team-members: {e}")
         return jsonify({'error': 'Error fetching team members.'}), 500
+
 
 @app.route('/candidate-team', methods=['GET'])
 def get_candidate_team():
