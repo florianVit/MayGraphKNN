@@ -344,14 +344,28 @@
                 if (!response.ok) {
                     throw new Error(`Failed to fetch candidate team: ${response.statusText}`);
                 }
+
                 const data = await response.json();
+                let content = "";
+
                 if (data.error) {
-                    candidateTeamDiv.innerHTML = `Error: ${data.error}`;
-                } else if (data.team) {
-                    candidateTeamDiv.innerHTML = `This candidate is in team: ${data.team}`;
+                    content = `Error: ${data.error}`;
                 } else {
-                    candidateTeamDiv.innerHTML = 'This candidate is not in any team.';
+                    if (data.team) {
+                        content += `This candidate is in team: <strong>${data.team}</strong><br>`;
+                    } else {
+                        content += "This candidate is not in any team.<br>";
+                    }
+
+                    if (!data.hasBig5 || !data.hasPersonality) {
+                        content += `<span style="color: #b91c1c;">⚠️ This candidate has not completed all required questionnaires:</span><ul>`;
+                        if (!data.hasBig5) content += "<li>Big 5 test missing</li>";
+                        if (!data.hasPersonality) content += "<li>Personality tests incomplete</li>";
+                        content += "</ul>";
+                    }
                 }
+
+                candidateTeamDiv.innerHTML = content;
                 candidateTeamDiv.style.display = 'block';
             } catch (error) {
                 console.error('Error fetching candidate team:', error);
@@ -359,6 +373,7 @@
                 candidateTeamDiv.style.display = 'block';
             }
         }
+
 
         function toggleControls() {
             const candidateSelect = document.getElementById('candidate-select');
