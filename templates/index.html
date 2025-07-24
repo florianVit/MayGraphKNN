@@ -300,54 +300,35 @@
             }
         }
 
-        async function fetchTeamMembers(firebaseId) {
-            const container = document.getElementById('team-members-container');
-            container.innerHTML = '';
-            if (!firebaseId) return;
+        async function fetchTeamMembers() {
+            const teamSelect = document.getElementById('team-select');
+            const teamMembersDiv = document.getElementById('team-members');
+            teamMembersDiv.style.display = 'none';
+
+            const teamName = teamSelect.value;
+            if (!teamName) return;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/team-members?firebaseId=${encodeURIComponent(firebaseId)}`);
-                if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-
+                console.log(`Fetching team members for team: ${teamName}`);
+                const response = await fetch(`${API_BASE_URL}/team-members?name=${encodeURIComponent(teamName)}`);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch team members: ${response.statusText}`);
+                }
                 const data = await response.json();
                 if (data.error) {
-                    container.innerHTML = `<p style="color: red;">${data.error}</p>`;
-                    return;
+                    teamMembersDiv.innerHTML = `Error: ${data.error}`;
+                } else if (data.members.length === 0) {
+                    teamMembersDiv.innerHTML = 'No members in this team.';
+                } else {
+                    teamMembersDiv.innerHTML = `<strong>Team Members:</strong><br>${data.members.join('<br>')}`;
                 }
-
-                const teamTitle = document.createElement('h3');
-                teamTitle.textContent = `Team: ${data.teamName}`;
-                container.appendChild(teamTitle);
-
-                const ul = document.createElement('ul');
-                data.members.forEach(member => {
-                    const li = document.createElement('li');
-                    const name = `${member.firstName} ${member.lastName}`;
-                    const isSelected = member.firebaseId === firebaseId;
-
-                    const missing = [];
-                    if (!member.hasBig5) missing.push("Big 5 test");
-                    missing.push(...member.missingPersonalityTests);
-
-                    let status;
-                    if (missing.length > 0) {
-                        status = `<span style="color: #b91c1c;">Missing: ${missing.join(', ')}</span>`;
-                    } else {
-                        status = `<span style="color: green;">✅ All tests completed</span>`;
-                    }
-
-                    li.innerHTML = `<strong${isSelected ? ' style="color: #1d4ed8; text-decoration: underline;"' : ''}>${name}</strong>: ${status}`;
-                    ul.appendChild(li);
-                });
-
-                container.appendChild(ul);
-
+                teamMembersDiv.style.display = 'block';
             } catch (error) {
-                console.error('Error loading team members:', error);
-                container.innerHTML = `Error: ${error.message}`;
+                console.error('Error fetching team members:', error);
+                teamMembersDiv.innerHTML = `Error loading team members: ${error.message}`;
+                teamMembersDiv.style.display = 'block';
             }
         }
-
 
         async function fetchCandidateTeam() {
             const candidateSelect = document.getElementById('candidate-select');
