@@ -84,15 +84,39 @@ def get_candidate_team():
         if not firebase_id:
             return jsonify({'error': 'No candidate ID provided.'}), 400
 
-        candidate = db.candidates.find_one({"firebaseId": firebase_id}, {"_id": 1})
+        candidate = db.candidates.find_one({"firebaseId": firebase_id}, {"_id": 1, "tests": 1})
         if not candidate:
             return jsonify({'error': f"Candidate '{firebase_id}' not found."}), 404
 
         team = db.teams.find_one({"members": candidate['_id']}, {"name": 1})
-        return jsonify({'team': team['name'] if team else None})
+        team_name = team['name'] if team else None
+
+        # Vérification des tests Big5 (specId="003") et personality
+        test_ids = candidate.get("tests", [])
+        test_ids = [ObjectId(t.get("$oid")) if isinstance(t, dict) else t for t in test_ids]
+        tests = list(db.tests.find({"_id": {"$in": test_ids}}))
+
+        has_big5 = any(t.get("specId") == "003" or "big 5" in t.get("name", "").lower() for t in tests)
+
+        personality_tests_required = {
+            "Assertiveness",
+            "Creative or Analytical",
+            "Intellectual Curiosity",
+            "Entrepreneur",
+            "Self-Motivation"
+        }
+        completed_tests = {t.get("name") for t in tests}
+        has_personality = personality_tests_required.issubset(completed_tests)
+
+        return jsonify({
+            'team': team_name,
+            'hasBig5': has_big5,
+            'hasPersonality': has_personality
+        })
     except Exception as e:
         print(f"Error fetching candidate team: {e}")
         return jsonify({'error': 'Error fetching candidate team status.'}), 500
+
 
 @app.route('/clear-cache', methods=['POST'])
 def clear_cache():
