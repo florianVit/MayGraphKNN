@@ -476,7 +476,7 @@
                     resultDiv.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Chart (${version})" onclick="openModal(this)">`;
                 }
             } catch (error) {
-                showError(`Error generating the chart: ${error.message}. Please ensure all required individuals have completed their responses.`);
+                showError(`Error generating the chart: ${error.message}. Please ensure all required individuals have completed their responses and retry.`);
                 console.error(error);
             } finally {
                 btnBig5.disabled = false;
