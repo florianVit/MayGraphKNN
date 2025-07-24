@@ -323,8 +323,9 @@
                 data.members.forEach(member => {
                     const li = document.createElement('li');
                     const name = `${member.firstName} ${member.lastName}`;
-                    const missing = [];
+                    const isSelected = member.firebaseId === firebaseId;
 
+                    const missing = [];
                     if (!member.hasBig5) missing.push("Big 5 test");
                     missing.push(...member.missingPersonalityTests);
 
@@ -335,7 +336,7 @@
                         status = `<span style="color: green;">✅ All tests completed</span>`;
                     }
 
-                    li.innerHTML = `<strong>${name}</strong>: ${status}`;
+                    li.innerHTML = `<strong${isSelected ? ' style="color: #1d4ed8; text-decoration: underline;"' : ''}>${name}</strong>: ${status}`;
                     ul.appendChild(li);
                 });
 
@@ -346,6 +347,7 @@
                 container.innerHTML = `Error: ${error.message}`;
             }
         }
+
 
         async function fetchCandidateTeam() {
             const candidateSelect = document.getElementById('candidate-select');
@@ -388,10 +390,7 @@
                 console.error('Error fetching candidate team:', error);
                 candidateTeamDiv.innerHTML = `Error loading candidate team status: ${error.message}`;
                 candidateTeamDiv.style.display = 'block';
-                
             }
-            fetchTeamMembers(firebaseId);
-
         }
 
 
