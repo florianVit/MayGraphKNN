@@ -315,13 +315,28 @@
                     throw new Error(`Failed to fetch team members: ${response.statusText}`);
                 }
                 const data = await response.json();
+                let content = "";
+
                 if (data.error) {
-                    teamMembersDiv.innerHTML = `Error: ${data.error}`;
+                    content = `Error: ${data.error}`;
                 } else if (data.members.length === 0) {
-                    teamMembersDiv.innerHTML = 'No members in this team.';
+                    content = 'No members in this team.';
                 } else {
-                    teamMembersDiv.innerHTML = `<strong>Team Members:</strong><br>${data.members.join('<br>')}`;
+                    content = `<strong>Team Members:</strong><ul>`;
+                    data.members.forEach(member => {
+                        content += `<li>${member.name} (${member.firebaseId})`;
+                        if (!member.hasBig5 || !member.hasPersonality) {
+                            content += `<br><span style="color: #b91c1c;">⚠️ This member has not completed all required questionnaires:</span><ul>`;
+                            if (!member.hasBig5) content += "<li>Big 5 test missing</li>";
+                            if (!member.hasPersonality) content += "<li>Personality tests incomplete</li>";
+                            content += "</ul>";
+                        }
+                        content += "</li>";
+                    });
+                    content += "</ul>";
                 }
+
+                teamMembersDiv.innerHTML = content;
                 teamMembersDiv.style.display = 'block';
             } catch (error) {
                 console.error('Error fetching team members:', error);
